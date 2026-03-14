@@ -2,10 +2,16 @@
 import json
 import math
 import sqlite3
+import pyogrio
+import geopandas as gpd
 from pathlib import Path
 
 from etl.constants import DOMAIN_MAPPINGS, SUBTYPE_MAPPINGS
 
+GDB = r'/home/asim/gis-land-analysis/data/AI _Test.gdb'
+layers = pyogrio.list_layers(GDB)   # see all layer names
+gdf = gpd.read_file(GDB, layer='SubdivisionParcelBoundary') # Fixed case based on user's directory
+print(gdf.columns.tolist())         # verify all fields are present
 
 def process_geojson_to_sqlite(geojson_path: str, sqlite_path: str) -> None:
     """Read GeoJSON and write processed records into SQLite."""
