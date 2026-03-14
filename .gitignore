@@ -17,7 +17,7 @@ env/
 *.env.local
 
 # Database
-data/*.db
+data/AI _Test.gdb
 data/*.sqlite
 
 # Node
