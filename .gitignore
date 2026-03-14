@@ -18,6 +18,7 @@ env/
 
 # Database
 data/AI _Test.gdb
+data/gis_database.db
 data/*.sqlite
 
 # Node
