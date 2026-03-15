@@ -12,7 +12,7 @@ def get_gemini_response(prompt: str) -> str:
     if not api_key:
         return "Gemini API key not found. Please add GEMINI_API_KEY to .env."
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel("gemini-pro")
+    model = genai.GenerativeModel("gemini-2.5-flash")
     response = model.generate_content(prompt)
     return response.text
 
