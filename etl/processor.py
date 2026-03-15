@@ -101,9 +101,9 @@ def process_data():
     import warnings
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        centroids = gdf.geometry.centroid
-        gdf["CENTROID_X"] = centroids.x
-        gdf["CENTROID_Y"] = centroids.y
+        rep_points = gdf.geometry.representative_point()
+        gdf["REPR_LON"] = rep_points.x
+        gdf["REPR_LAT"] = rep_points.y
 
     # 3. Apply Dynamic Three-Column Classification on the fly
     print("Applying dynamic standard classifications...")

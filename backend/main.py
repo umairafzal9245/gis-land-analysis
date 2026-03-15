@@ -24,6 +24,9 @@ def read_root():
 @app.post("/analyze/bbox", response_model=AnalysisResponse)
 def api_analyze_bbox(req: BBoxRequest):
     try:
+        if not (24 < req.min_lat < 26 and 46 < req.min_lon < 48):
+            req.min_lat, req.min_lon = req.min_lon, req.min_lat
+            req.max_lat, req.max_lon = req.max_lon, req.max_lat
         stats = analyze_bbox(
             req.min_lon, req.min_lat, req.max_lon, req.max_lat,
             req.shop_size_m2, req.mosque_space_m2
