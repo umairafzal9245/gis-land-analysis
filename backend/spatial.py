@@ -82,7 +82,9 @@ def select_parcels_in_polygon(
         lon = parcel.get("REPR_LON")
         if lat is not None and lon is not None:
             point = Point(lon, lat)  # Shapely uses (x=lon, y=lat)
-            if polygon.contains(point):
+            # Use covers() not contains(): covers() returns True when the point lies
+            # on the polygon boundary, so parcels on the edge are correctly included.
+            if polygon.covers(point):
                 matching_parcels.append(parcel)
     
     # Step 4: Compute selection summary

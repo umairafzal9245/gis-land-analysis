@@ -95,14 +95,17 @@ def process_data():
 
     # =========================================================================
     # Step 2 — Compute representative point (NOT centroid)
-    # representative_point() is guaranteed to fall inside the polygon
+    # representative_point() is guaranteed to fall inside the polygon.
+    # Reproject to WGS84 first so REPR_LON/REPR_LAT are always in degrees
+    # (longitude, latitude) regardless of the source CRS. Without this, a
+    # UTM/metric source CRS would store easting/northing in metres, breaking
+    # all geographic point-in-polygon queries at query time.
     # =========================================================================
-    print("[ETL] Step 2: Computing representative points...")
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        rep_points = gdf.geometry.representative_point()
-        gdf["REPR_LON"] = rep_points.x
-        gdf["REPR_LAT"] = rep_points.y
+    print("[ETL] Step 2: Computing representative points in WGS84...")
+    gdf_wgs84 = gdf.to_crs('EPSG:4326')
+    rep_points = gdf_wgs84.geometry.representative_point()
+    gdf["REPR_LON"] = rep_points.x  # longitude (degrees)
+    gdf["REPR_LAT"] = rep_points.y  # latitude  (degrees)
 
     # =========================================================================
     # Step 3 — SUBTYPE-based classification

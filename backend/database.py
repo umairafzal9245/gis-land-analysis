@@ -262,7 +262,10 @@ def get_parcels_in_polygon(polygon_geojson: dict, db_path: str = DB_PATH) -> lis
     for c in candidates:
         if c.get("REPR_LON") is not None and c.get("REPR_LAT") is not None:
             pt = Point(c["REPR_LON"], c["REPR_LAT"])
-            if poly.contains(pt):
+            # Use covers() not contains(): covers() returns True when the point lies
+            # on the polygon boundary, so parcels whose representative point sits
+            # exactly on the drawn polygon edge are correctly included.
+            if poly.covers(pt):
                 results.append(c)
     return results
 
