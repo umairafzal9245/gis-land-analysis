@@ -1,38 +1,38 @@
-const BASE = "/api";
+import axios from 'axios';
 
-async function request(path, options = {}) {
-  const res = await fetch(`${BASE}${path}`, options);
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`API error ${res.status}: ${text}`);
-  }
-  return res.json();
-}
+const API_BASE_URL = 'http://localhost:8000'; // Make sure this matches fastAPI 
 
-export async function getHealth() {
-  return request("/health");
-}
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-export async function getParcels(bbox = null) {
-  if (bbox) {
-    const { minX, minY, maxX, maxY } = bbox;
-    return request(`/parcels?min_x=${minX}&min_y=${minY}&max_x=${maxX}&max_y=${maxY}`);
-  }
-  return request("/parcels");
-}
+export const analyzeBBox = async (bbox) => {
+  const response = await apiClient.post('/analyze/bbox', bbox);
+  return response.data;
+};
 
-export async function getParcelStats() {
-  return request("/parcels/stats");
-}
+export const analyzePolygon = async (polygonData) => {
+  const response = await apiClient.post('/analyze/polygon', polygonData);
+  return response.data;
+};
 
-export async function analyzeParcels(provider = "ollama") {
-  return request("/analyze", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ provider }),
+export const generateReport = async (stats, extraContext = '') => {
+  const response = await apiClient.post('/report', {
+    stats: stats,
+    extra_context: extraContext
   });
-}
+  return response.data;
+};
 
-export function getReportUrl() {
-  return `${BASE}/report`;
-}
+export default apiClient;
+
+export const generateTextReport = async (blockId) => {
+  return await apiClient.post('/report', { block_id: blockId });
+};
+
+export const generatePdfReport = async (blockId) => {
+  return await apiClient.post('/report/pdf', { block_id: blockId }, { responseType: 'blob' });
+};

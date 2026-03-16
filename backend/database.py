@@ -63,8 +63,8 @@ def get_parcels_in_bbox(min_x: float, min_y: float, max_x: float, max_y: float, 
         rows = conn.execute(
             """
             SELECT * FROM parcels
-            WHERE CENTROID_X >= ? AND CENTROID_X <= ?
-              AND CENTROID_Y >= ? AND CENTROID_Y <= ?
+            WHERE REPR_LON >= ? AND REPR_LON <= ?
+              AND REPR_LAT >= ? AND REPR_LAT <= ?
             """,
             (min_x, max_x, min_y, max_y),
         ).fetchall()
@@ -80,8 +80,8 @@ def get_parcels_in_polygon(polygon_geojson: dict, db_path: str = DB_PATH) -> lis
     candidates = get_parcels_in_bbox(min_x, min_y, max_x, max_y, db_path)
     results = []
     for c in candidates:
-        if "CENTROID_X" in c and "CENTROID_Y" in c and c["CENTROID_X"] is not None and c["CENTROID_Y"] is not None:
-            pt = Point(c["CENTROID_X"], c["CENTROID_Y"])
+        if "REPR_LON" in c and "REPR_LAT" in c and c["REPR_LON"] is not None and c["REPR_LAT"] is not None:
+            pt = Point(c["REPR_LON"], c["REPR_LAT"])
             if poly.contains(pt):
                 results.append(c)
     return results
