@@ -14,13 +14,16 @@ const GOOGLE_MAPS = 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}';
 
 // Marker colors by category
 const CATEGORY_COLORS = {
-  Mosque: '#3b82f6',
-  Commercial: '#f59e0b',
-  Residential: '#10b981',
-  Park: '#22c55e',
-  Educational: '#8b5cf6',
-  Government: '#ef4444',
-  Unknown: '#6b7280',
+  Residential:  '#10b981',
+  Commercial:   '#f59e0b',
+  Religious:    '#3b82f6',
+  Educational:  '#8b5cf6',
+  Health:       '#ec4899',
+  Municipal:    '#ef4444',
+  Recreational: '#22c55e',
+  Utilities:    '#6366f1',
+  Special:      '#a855f7',
+  Unknown:      '#6b7280',
 };
 
 // DrawControl wrapper to handle mode changes
@@ -138,12 +141,12 @@ function MarkersLayer({ parcels, highlightedObjectIds, selectedObjectIds, onParc
         const objectId = parcel.OBJECTID;
         const category = parcel.LANDUSE_CATEGORY || 'Unknown';
         const color = CATEGORY_COLORS[category] || CATEGORY_COLORS.Unknown;
-        const isMosque = category === 'Mosque';
+        const isReligious = category === 'Religious';
         const isHighlighted = highlightSet.has(objectId);
         const isSelected = selectedSet.has(objectId);
 
         // Determine radius and opacity based on state
-        let radius = isMosque ? 8 : 5;
+        let radius = isReligious ? 8 : 5;
         let fillOpacity = 0.85;
 
         if (hasHighlight) {

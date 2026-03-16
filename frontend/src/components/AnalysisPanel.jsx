@@ -44,7 +44,7 @@ const AnalysisPanel = ({ results, selectionData, onZoomToBlock, onBlockReport })
       
       const cat = parcel.LANDUSE_CATEGORY;
       const area = Number(parcel.AREA_M2) || 0;
-      if (cat === 'Mosque') {
+      if (cat === 'Religious') {
         blocks[blockId].mosque_count++;
         blocks[blockId].mosque_area += area;
       } else if (cat === 'Commercial') {

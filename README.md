@@ -39,6 +39,8 @@ process_geojson_to_sqlite('data/SubdivisionParcelBoundary.geojson', 'data/gis_da
 cd /home/asim/gis-land-analysis && python -m etl.processor
 uvicorn backend.main:app --reload --port 8000
 npm run dev
+
+
 ### Run the API server
 
 ```bash

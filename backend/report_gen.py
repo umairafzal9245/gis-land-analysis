@@ -93,7 +93,7 @@ def generate_pdf_report(stats: dict, report_text: str = "") -> bytes:
         ["Developed Parcels", f"{stats.get('developed_count', 0):,}"],
         ["Commercial Area", f"{stats.get('commercial_total_area_m2', 0):,.0f} m²"],
         ["Non-Commercial Area", f"{stats.get('non_commercial_total_area_m2', 0):,.0f} m²"],
-        ["Mosque Capacity", f"{stats.get('total_mosque_capacity', 0):,} worshippers"],
+        ["Religious Capacity", f"{stats.get('total_religious_capacity', 0):,} worshippers"],
         ["Estimated Shops", f"{stats.get('total_shops_estimated', 0):,} units"],
         ["Blocks Covered", f"{len(stats.get('block_ids_covered', [])):,}"],
     ]

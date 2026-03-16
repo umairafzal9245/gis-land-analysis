@@ -14,12 +14,15 @@
   --text-secondary: #94a3b8;
 
   /* Map Marker Colors */
-  --marker-mosque: #3b82f6;
+  --marker-religious: #3b82f6;
   --marker-commercial: #f59e0b;
   --marker-residential: #10b981;
-  --marker-park: #22c55e;
+  --marker-recreational: #22c55e;
   --marker-educational: #8b5cf6;
-  --marker-government: #ef4444;
+  --marker-municipal: #ef4444;
+  --marker-health: #ec4899;
+  --marker-utilities: #6366f1;
+  --marker-special: #a855f7;
   --marker-unknown: #6b7280;
 
   /* Typography */

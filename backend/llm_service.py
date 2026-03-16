@@ -122,7 +122,7 @@ def build_selection_report_prompt(
     developed_count = summary.get("developed_count", 0)
     commercial_area = summary.get("commercial_total_area_m2", 0)
     non_commercial_area = summary.get("non_commercial_total_area_m2", 0)
-    mosque_capacity = summary.get("total_mosque_capacity", 0)
+    religious_capacity = summary.get("total_religious_capacity", 0)
     shops_estimated = summary.get("total_shops_estimated", 0)
     blocks_covered = summary.get("block_ids_covered", [])
     
@@ -177,7 +177,7 @@ LAND USE BREAKDOWN BY CATEGORY (SUBTYPE-based classification):
 {category_breakdown_text}
 
 CAPACITY ESTIMATES:
-  - Total Mosque Capacity: {mosque_capacity:,} worshippers (at 8 m²/person)
+  - Total Religious Facility Capacity: {religious_capacity:,} worshippers (at 1 m²/person)
   - Total Commercial Shops: {shops_estimated:,} units (at 120 m²/shop estimate)
 
 DEVELOPMENT STATUS:
@@ -203,7 +203,7 @@ Generate a professional urban planning report with EXACTLY these five sections:
    Discuss the distribution and any notable patterns.
 
 3. CAPACITY AND UTILIZATION ASSESSMENT
-   Evaluate mosque capacity relative to population estimates.
+   Evaluate religious facility (mosque) capacity relative to population estimates.
    Analyze commercial potential and shop density.
    Identify any capacity constraints or opportunities.
 
@@ -241,7 +241,7 @@ Tier 1: MAINLANDUSE Breakdown
 
 Tier 2: DETAILSLANDUSE Breakdown
 {detail_breakdown or 'None available'}
-Total Mosque Capacity (8 m2/person): {stats.get('total_mosque_capacity', 0)}
+Total Mosque Capacity (1 m2/person): {stats.get('total_religious_capacity', 0)}
 Total Shops ({shop_size_m2} m2/shop): {stats.get('total_shops', 0)}
 
 Tier 3: SUBTYPE Summary

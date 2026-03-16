@@ -7,13 +7,16 @@ import {
 import AnalysisPanel from './AnalysisPanel';
 
 const CATEGORY_COLORS = {
-  Mosque: { color: '#3b82f6', icon: Church },
-  Commercial: { color: '#f59e0b', icon: Building2 },
-  Residential: { color: '#10b981', icon: MapPin },
-  Park: { color: '#22c55e', icon: Trees },
-  Educational: { color: '#8b5cf6', icon: GraduationCap },
-  Government: { color: '#ef4444', icon: Landmark },
-  Unknown: { color: '#6b7280', icon: HelpCircle },
+  Residential:  { color: '#10b981', icon: MapPin },
+  Commercial:   { color: '#f59e0b', icon: Building2 },
+  Religious:    { color: '#3b82f6', icon: Church },
+  Educational:  { color: '#8b5cf6', icon: GraduationCap },
+  Health:       { color: '#ec4899', icon: HelpCircle },
+  Municipal:    { color: '#ef4444', icon: Landmark },
+  Recreational: { color: '#22c55e', icon: Trees },
+  Utilities:    { color: '#6366f1', icon: MapPin },
+  Special:      { color: '#a855f7', icon: Landmark },
+  Unknown:      { color: '#6b7280', icon: HelpCircle },
 };
 
 export default function BottomPanel({ 
@@ -36,7 +39,7 @@ export default function BottomPanel({
     total_parcels = 0,
     total_area_m2 = 0,
     category_breakdown = {},
-    total_mosque_capacity = 0,
+    total_religious_capacity = 0,
     vacant_count = 0,
     developed_count = 0,
   } = selectionSummary;
@@ -44,16 +47,16 @@ export default function BottomPanel({
   const categories = Object.entries(category_breakdown).sort((a, b) => b[1] - a[1]);
   
   // Calculate stats
-  const mosqueCount = category_breakdown['Mosque'] || 0;
-  const parkCount = category_breakdown['Park'] || 0;
+  const religiousCount = category_breakdown['Religious'] || 0;
+  const recreationalCount = category_breakdown['Recreational'] || 0;
   const educationalCount = category_breakdown['Educational'] || 0;
-  const governmentCount = category_breakdown['Government'] || 0;
+  const municipalCount = category_breakdown['Municipal'] || 0;
   const commercialCount = category_breakdown['Commercial'] || 0;
   const nonCommercialCount = total_parcels - commercialCount;
   const commercialPercent = total_parcels > 0 ? ((commercialCount / total_parcels) * 100).toFixed(0) : 0;
   
   // Estimate commercial capacity (at 120 m² per shop)
-  const commercialArea = selectionSummary.commercial_area_m2 || 0;
+  const commercialArea = selectionSummary.commercial_total_area_m2 || 0;
   const estimatedShops = Math.floor(commercialArea / 120);
 
   return (
@@ -142,8 +145,8 @@ export default function BottomPanel({
                         <Church size={14} color="white" />
                       </div>
                       <div style={styles.facilityInfo}>
-                        <span style={styles.facilityCount}>{mosqueCount}</span>
-                        <span style={styles.facilityLabel}>Mosques</span>
+                        <span style={styles.facilityCount}>{religiousCount}</span>
+                        <span style={styles.facilityLabel}>Religious</span>
                       </div>
                     </div>
                     <div style={styles.facilityItem}>
@@ -151,8 +154,8 @@ export default function BottomPanel({
                         <Trees size={14} color="white" />
                       </div>
                       <div style={styles.facilityInfo}>
-                        <span style={styles.facilityCount}>{parkCount}</span>
-                        <span style={styles.facilityLabel}>Parks</span>
+                        <span style={styles.facilityCount}>{recreationalCount}</span>
+                        <span style={styles.facilityLabel}>Recreational</span>
                       </div>
                     </div>
                     <div style={styles.facilityItem}>
@@ -169,8 +172,8 @@ export default function BottomPanel({
                         <Landmark size={14} color="white" />
                       </div>
                       <div style={styles.facilityInfo}>
-                        <span style={styles.facilityCount}>{governmentCount}</span>
-                        <span style={styles.facilityLabel}>Government</span>
+                        <span style={styles.facilityCount}>{municipalCount}</span>
+                        <span style={styles.facilityLabel}>Municipal</span>
                       </div>
                     </div>
                   </div>
@@ -183,8 +186,8 @@ export default function BottomPanel({
                     <div style={styles.capacityItem}>
                       <Users size={16} color="var(--accent-blue)" />
                       <div>
-                        <div style={styles.capacityValue}>{(total_mosque_capacity || 0).toLocaleString()}</div>
-                        <div style={styles.capacityLabel}>Mosque Capacity</div>
+                        <div style={styles.capacityValue}>{(total_religious_capacity || 0).toLocaleString()}</div>
+                        <div style={styles.capacityLabel}>Religious Capacity</div>
                       </div>
                     </div>
                     <div style={styles.capacityItem}>

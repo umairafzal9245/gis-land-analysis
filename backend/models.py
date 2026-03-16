@@ -2,8 +2,11 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Dict, Any, List
 
-# Valid categories for category queries
-QUERYABLE_CATEGORIES = ["Mosque", "Commercial", "Residential", "Park", "Educational", "Government"]
+# Valid categories for category queries — must match LANDUSE_CATEGORIES in etl/constants.py
+QUERYABLE_CATEGORIES = [
+    "Residential", "Commercial", "Religious", "Educational",
+    "Health", "Municipal", "Recreational", "Utilities", "Special", "Unknown",
+]
 
 
 # =============================================================================
@@ -146,18 +149,20 @@ class AnalysisResponse(BaseModel):
     total_area_m2: float
     vacant_count: int
     developed_count: int
-    mosque_count: int
-    mosque_total_area_m2: float
-    mosque_capacity_estimate: int
-    park_count: int
-    park_total_area_m2: float
+    religious_count: int
+    religious_total_area_m2: float
+    religious_capacity_estimate: int
+    recreational_count: int
+    recreational_total_area_m2: float
     residential_count: int
     residential_total_area_m2: float
     commercial_count: int
     commercial_total_area_m2: float
     shops_estimate: int
-    government_count: int
+    municipal_count: int
     educational_count: int
+    health_count: int
+    utilities_count: int
     breakdown_by_category: Dict[str, Dict[str, Any]]
     landuse_category: Optional[Dict[str, int]] = None
     mainlanduse_label: Optional[Dict[str, int]] = None

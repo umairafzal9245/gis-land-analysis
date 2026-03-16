@@ -3,12 +3,16 @@ import { X, Download, FileText, Loader, AlertCircle, ChevronDown, ChevronUp } fr
 import { generatePdfReport } from '../api/client';
 
 const CATEGORY_COLORS = {
-  Mosque: '#3b82f6',
-  Commercial: '#f59e0b',
-  Residential: '#10b981',
-  Park: '#22c55e',
-  Educational: '#8b5cf6',
-  Government: '#ef4444',
+  Residential:  '#10b981',
+  Commercial:   '#f59e0b',
+  Religious:    '#3b82f6',
+  Educational:  '#8b5cf6',
+  Health:       '#ec4899',
+  Municipal:    '#ef4444',
+  Recreational: '#22c55e',
+  Utilities:    '#6366f1',
+  Special:      '#a855f7',
+  Unknown:      '#6b7280',
 };
 
 export default function ReportViewer({ 
@@ -192,7 +196,7 @@ export default function ReportViewer({
                       <div style={styles.capacityValue}>
                         {Math.floor(
                           selectionData.parcels
-                            .filter(p => p.LANDUSE_CATEGORY === 'Mosque')
+                            .filter(p => p.LANDUSE_CATEGORY === 'Religious')
                             .reduce((s, p) => s + (Number(p.AREA_M2) || 0), 0) / 8
                         ).toLocaleString()}
                       </div>

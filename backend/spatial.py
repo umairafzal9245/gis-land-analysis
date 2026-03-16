@@ -124,7 +124,7 @@ def _build_selection_summary(parcels: list[dict]) -> dict:
         - breakdown: dict by LANDUSE_CATEGORY with count, area, capacity, shops
         - vacant_count, developed_count
         - commercial_total_area_m2, non_commercial_total_area_m2
-        - total_mosque_capacity, total_shops_estimated
+        - total_religious_capacity, total_shops_estimated
         - block_ids_covered: unique BLOCK_IDs
     """
     if not parcels:
@@ -136,7 +136,7 @@ def _build_selection_summary(parcels: list[dict]) -> dict:
     developed_count = 0
     commercial_total_area_m2 = 0.0
     non_commercial_total_area_m2 = 0.0
-    total_mosque_capacity = 0
+    total_religious_capacity = 0
     total_shops_estimated = 0
     block_ids = set()
     
@@ -186,8 +186,8 @@ def _build_selection_summary(parcels: list[dict]) -> dict:
         breakdown[category]["total_shops_estimated"] += shops
         
         # Category-specific totals
-        if category == "Mosque":
-            total_mosque_capacity += capacity
+        if category == "Religious":
+            total_religious_capacity += capacity
         if is_commercial == 1 or is_commercial == True or str(is_commercial).lower() == "true":
             total_shops_estimated += shops
         
@@ -201,11 +201,12 @@ def _build_selection_summary(parcels: list[dict]) -> dict:
         "total_parcels": len(parcels),
         "total_area_m2": round(total_area_m2, 2),
         "breakdown": breakdown,
+        "category_breakdown": {cat: info["count"] for cat, info in breakdown.items()},
         "vacant_count": vacant_count,
         "developed_count": developed_count,
         "commercial_total_area_m2": round(commercial_total_area_m2, 2),
         "non_commercial_total_area_m2": round(non_commercial_total_area_m2, 2),
-        "total_mosque_capacity": total_mosque_capacity,
+        "total_religious_capacity": total_religious_capacity,
         "total_shops_estimated": total_shops_estimated,
         "block_ids_covered": sorted(list(block_ids)),
         "parcels": parcels,
@@ -219,11 +220,12 @@ def _empty_selection_summary() -> dict:
         "total_parcels": 0,
         "total_area_m2": 0.0,
         "breakdown": {},
+        "category_breakdown": {},
         "vacant_count": 0,
         "developed_count": 0,
         "commercial_total_area_m2": 0.0,
         "non_commercial_total_area_m2": 0.0,
-        "total_mosque_capacity": 0,
+        "total_religious_capacity": 0,
         "total_shops_estimated": 0,
         "block_ids_covered": [],
         "parcels": [],
