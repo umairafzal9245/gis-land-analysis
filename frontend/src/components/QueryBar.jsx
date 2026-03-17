@@ -252,7 +252,7 @@ export default function QueryBar({
 const styles = {
   wrapper: {
     position: 'absolute',
-    top: 'calc(var(--topbar-height) + 10px)',
+    top: 'calc(var(--topbar-height) + 16px)',
     left: '50%',
     transform: 'translateX(-50%)',
     zIndex: 950,

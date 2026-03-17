@@ -34,7 +34,7 @@ export default function TopBar({ selectionSummary, onGenerateReport, isGeneratin
           <div style={styles.logoIcon}>
             <Layers size={15} color="white" strokeWidth={2.5} />
           </div>
-          <span style={styles.title}>Land Analysis Platform</span>
+          <span style={styles.title}>GIS Analysis Platform</span>
         </div>
 
         <div style={styles.divider} />

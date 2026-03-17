@@ -48,7 +48,7 @@
   --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 
   /* Layout */
-  --topbar-height: 72px;
+  --topbar-height: 80px;
   --toolbar-width: 60px;
   --drawer-width: 420px;
   --bottom-panel-height: 460px;

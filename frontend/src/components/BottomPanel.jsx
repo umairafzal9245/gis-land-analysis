@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   ChevronUp, ChevronDown, Home, Building2, Zap, Users, Store,
   GraduationCap, Landmark, Trees, HelpCircle, Heart, Shield,
-  Construction, CheckCircle, BarChart2
+  Construction, CheckCircle, BarChart2, Maximize2, TrendingUp, Grid3X3
 } from 'lucide-react';
 import AnalysisPanel from './AnalysisPanel';
 
@@ -40,15 +40,15 @@ export default function BottomPanel({
     total_parcels = 0,
     total_area_m2 = 0,
     category_breakdown = {},
-    total_religious_capacity = 0,
     vacant_count = 0,
     developed_count = 0,
+    block_ids_covered = [],
   } = selectionSummary;
 
-  const commercialCount   = category_breakdown['Commercial'] || 0;
-  const commercialArea    = selectionSummary.commercial_total_area_m2 || 0;
-  const estimatedShops    = Math.floor(commercialArea / 120);
-  const commercialPercent = total_parcels > 0 ? ((commercialCount / total_parcels) * 100).toFixed(1) : 0;
+  const avgParcelSize = total_parcels > 0 ? (total_area_m2 / total_parcels).toFixed(0) : 0;
+  const developmentRate = total_parcels > 0 ? ((developed_count / total_parcels) * 100).toFixed(1) : 0;
+  const blocksCovered = block_ids_covered.length || 0;
+  const activeLandUses = Object.values(category_breakdown).filter(c => c > 0).length;
 
   const kpiCards = [
     { value: total_parcels.toLocaleString(),                        label: 'Total Parcels',   color: '#3b82f6', bg: 'rgba(59,130,246,0.08)'  },
@@ -58,9 +58,10 @@ export default function BottomPanel({
   ];
 
   const capacityItems = [
-    { value: (total_religious_capacity || 0).toLocaleString(), label: 'Religious Capacity', icon: Users,      color: '#3b82f6' },
-    { value: estimatedShops.toLocaleString(),                  label: 'Est. Shops (120m²)', icon: Store,      color: '#d97706' },
-    { value: `${commercialPercent}%`,                          label: 'Commercial Mix',     icon: BarChart2,  color: '#a855f7' },
+    { value: `${Number(avgParcelSize).toLocaleString()} m²`, label: 'Avg. Parcel Size',  icon: Maximize2,   color: '#3b82f6' },
+    { value: `${developmentRate}%`,                          label: 'Development Rate',  icon: TrendingUp,  color: '#059669' },
+    { value: `${activeLandUses}`,                            label: 'Land Use Types',    icon: BarChart2,   color: '#8b5cf6' },
+    { value: blocksCovered.toLocaleString(),                 label: 'Blocks Covered',    icon: Grid3X3,     color: '#d97706' },
   ];
 
   return (
@@ -127,8 +128,8 @@ export default function BottomPanel({
                 })}
               </div>
 
-              {/* Capacity Row */}
-              <div style={styles.sectionLabel}>Capacity Estimates</div>
+              {/* Spatial Insights Row */}
+              <div style={styles.sectionLabel}>Spatial Insights</div>
               <div style={styles.capacityRow}>
                 {capacityItems.map(({ value, label, icon: Icon, color }) => (
                   <div key={label} style={styles.capItem}>
@@ -315,7 +316,7 @@ const styles = {
   /* Capacity row */
   capacityRow: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(4, 1fr)',
     gap: 8,
   },
   capItem: {
