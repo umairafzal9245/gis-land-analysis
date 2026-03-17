@@ -490,7 +490,25 @@ def answer_nl_query(
     raw = call_llm(prompt, provider)
     answer, filters = _parse_nl_response(raw)
     matching_ids = _filter_parcels_by_criteria(parcels_summary.get("parcels", []), filters)
-    return {"answer": answer, "matching_parcel_ids": matching_ids}
+
+    # Patch: Ensure answer count matches filtered result
+    import re
+    count = len(matching_ids)
+    patched_answer = answer
+    # Try to replace any leading count in the answer (e.g., "19 commercial parcels ...")
+    patched = False
+    m = re.match(r"(\d+)\s+([a-zA-Z\s]+parcels? can fit.*)", answer.strip(), re.IGNORECASE)
+    if m:
+        patched_answer = f"{count} {m.group(2)}"
+        patched = True
+    # If not patched, append a clarifying line
+    if not patched:
+        patched_answer = answer.strip()
+        if not patched_answer.endswith("."):
+            patched_answer += "."
+        patched_answer += f" (Actual matching parcels: {count})"
+
+    return {"answer": patched_answer, "matching_parcel_ids": matching_ids}
 
 
 async def stream_nl_query(
@@ -602,6 +620,61 @@ def _build_nl_query_prompt(question: str, summary: dict) -> str:
     else:
         area_stats = "  No area data available"
 
+    # ---- Numeric distributions for threshold queries ----
+    capacity_values = []
+    shops_values = []
+    for p in parcels:
+        cap = float(p.get("CAPACITY_ESTIMATED") or 0)
+        if cap > 0:
+            capacity_values.append(cap)
+        shp = float(p.get("SHOPS_ESTIMATED") or 0)
+        if shp > 0:
+            shops_values.append(shp)
+
+    # Area distribution buckets
+    area_buckets = [
+        ("< 500 m²",         lambda a: a < 500),
+        ("500–1,000 m²",     lambda a: 500 <= a < 1000),
+        ("1,000–2,000 m²",   lambda a: 1000 <= a < 2000),
+        ("2,000–5,000 m²",   lambda a: 2000 <= a < 5000),
+        ("> 5,000 m²",       lambda a: a >= 5000),
+    ]
+    area_dist_lines = "\n".join(
+        f"  {label}: {sum(1 for a in areas if fn(a))} parcels"
+        for label, fn in area_buckets
+    ) if areas else "  No area data available"
+
+    # Capacity distribution (religious/mosque parcels only)
+    if capacity_values:
+        cap_thresholds = [100, 250, 350, 500, 750, 1000]
+        cap_dist_lines = "\n".join(
+            f"  > {t}: {sum(1 for c in capacity_values if c > t)} parcels"
+            for t in cap_thresholds
+        )
+        cap_dist_lines = (
+            f"  Total with capacity > 0: {len(capacity_values)} parcels\n"
+            f"  Min: {min(capacity_values):,.0f}  Max: {max(capacity_values):,.0f}  "
+            f"Avg: {sum(capacity_values)/len(capacity_values):,.0f}\n"
+            + cap_dist_lines
+        )
+    else:
+        cap_dist_lines = "  No capacity data available"
+
+    # Shops distribution (commercial parcels only)
+    if shops_values:
+        shop_thresholds = [5, 10, 15, 20, 30]
+        shop_dist_lines = "\n".join(
+            f"  > {t} shops: {sum(1 for s in shops_values if s > t)} parcels"
+            for t in shop_thresholds
+        )
+        shop_dist_lines = (
+            f"  Total with shops > 0: {len(shops_values)} parcels\n"
+            f"  Max: {max(shops_values):,.0f}\n"
+            + shop_dist_lines
+        )
+    else:
+        shop_dist_lines = "  No shops data available"
+
     return f"""You are a GIS data assistant. Answer the user's question using ONLY the data provided below.
 If the data does not contain information to answer the question, say so honestly — do NOT make up data.
 Be concise and factual. Use numbers when available.
@@ -634,6 +707,15 @@ Building Floors Distribution:
 Area Statistics:
 {area_stats}
 
+Area Distribution (all parcels):
+{area_dist_lines}
+
+Capacity Distribution (CAPACITY_ESTIMATED — religious/mosque parcels):
+{cap_dist_lines}
+
+Shops Distribution (SHOPS_ESTIMATED — commercial parcels):
+{shop_dist_lines}
+
 === USER QUESTION ===
 {question}
 
@@ -647,15 +729,26 @@ After your answer, on a NEW line, output a JSON block wrapped in ```json ... ```
   "relevant_categories": ["LANDUSE_CATEGORY values — use ONLY for broad queries like 'show all religious' or 'show commercial'"],
   "relevant_subtypes": ["SUBTYPE_LABEL_EN values if the question targets a subtype"],
   "relevant_details": ["DETAIL_LABEL_EN values from the Detailed Land Use section — use for SPECIFIC types like Mosque, School, Park, Hospital etc."],
-  "relevant_statuses": ["STATUS values if the question targets development status e.g. Vacant, Developed"]
+  "relevant_statuses": ["STATUS values if the question targets development status e.g. Vacant, Developed"],
+  "numeric_filters": [
+    {{"field": "FIELD_NAME", "op": "OPERATOR", "value": NUMBER}}
+  ]
 }}
-IMPORTANT: Be as SPECIFIC as possible. For example:
-- "how many mosques" → use relevant_details: ["Mosque"] (NOT relevant_categories: ["Religious"] which includes imam residences etc.)
-- "show schools" → use relevant_details matching the exact school detail labels from the data
-- "show all commercial" → use relevant_categories: ["Commercial"]
+Available numeric fields:
+  - "AREA_M2"            — parcel area in square metres (use the Area Distribution above for accurate counts)
+  - "CAPACITY_ESTIMATED" — estimated worshipper capacity (religious parcels only; use the Capacity Distribution above)
+  - "SHOPS_ESTIMATED"    — estimated number of commercial shop units (use the Shops Distribution above)
+Supported operators: ">", "<", ">=", "<=", "="
+IMPORTANT: Be as SPECIFIC as possible. Examples:
+- "mosques with capacity > 350"              → relevant_details: ["Mosque"], numeric_filters: [{{"field": "CAPACITY_ESTIMATED", "op": ">", "value": 350}}]
+- "vacant parcels larger than 2000 m²"       → relevant_statuses: ["Vacant"], numeric_filters: [{{"field": "AREA_M2", "op": ">", "value": 2000}}]
+- "commercial parcels fitting > 10 shops"    → relevant_categories: ["Commercial"], numeric_filters: [{{"field": "SHOPS_ESTIMATED", "op": ">", "value": 10}}]
+- "parcels between 1000 and 5000 m²"         → numeric_filters: [{{"field": "AREA_M2", "op": ">=", "value": 1000}}, {{"field": "AREA_M2", "op": "<=", "value": 5000}}]
+- "schools with plot area under 800 m²"      → relevant_details: ["School"], numeric_filters: [{{"field": "AREA_M2", "op": "<", "value": 800}}]
+- "how many mosques" (no threshold)          → relevant_details: ["Mosque"], numeric_filters: []
 Only include non-empty arrays for criteria that are actually relevant to the question.
-If the question is general (about ALL parcels), return empty arrays for all fields.
-The values MUST exactly match the labels from the data above (case-sensitive).
+Omit "numeric_filters" or leave it empty when no numeric threshold is mentioned.
+The label values MUST exactly match the labels from the data above (case-sensitive).
 """
 
 
@@ -683,9 +776,9 @@ def _parse_nl_response(raw: str) -> tuple[str, dict]:
 def _filter_parcels_by_criteria(parcels: list[dict], filters: dict) -> list[str]:
     """Filter parcels using criteria extracted from LLM response.
 
-    Uses the most specific filter available: details > subtypes > categories > statuses.
-    When a more specific filter is present, broader filters are ignored to avoid
-    over-matching (e.g. "Mosque" detail won't also match all "Religious" parcels).
+    Uses the most specific label filter available: details > subtypes > categories > statuses.
+    Numeric filters (AREA_M2, CAPACITY_ESTIMATED, SHOPS_ESTIMATED) are applied as
+    additional AND conditions on top of whatever label filter is active.
 
     Returns list of matching PARCEL_IDs.
     """
@@ -693,31 +786,62 @@ def _filter_parcels_by_criteria(parcels: list[dict], filters: dict) -> list[str]
     subtypes = [v.lower() for v in filters.get("relevant_subtypes", [])]
     details = [v.lower() for v in filters.get("relevant_details", [])]
     statuses = [v.lower() for v in filters.get("relevant_statuses", [])]
+    numeric_filters = [
+        nf for nf in filters.get("numeric_filters", [])
+        if isinstance(nf, dict) and nf.get("field") and nf.get("op") and nf.get("value") is not None
+    ]
 
-    # If no filters specified, no highlighting
-    if not any([categories, subtypes, details, statuses]):
+    has_label_filter = any([categories, subtypes, details, statuses])
+    has_numeric_filter = bool(numeric_filters)
+
+    # If no filters at all, no highlighting
+    if not has_label_filter and not has_numeric_filter:
         return []
+
+    _OPS = {
+        ">": lambda a, b: a > b,
+        "<": lambda a, b: a < b,
+        ">=": lambda a, b: a >= b,
+        "<=": lambda a, b: a <= b,
+        "=": lambda a, b: a == b,
+        "==": lambda a, b: a == b,
+    }
+
+    def passes_numeric(p: dict) -> bool:
+        for nf in numeric_filters:
+            op_fn = _OPS.get(nf["op"])
+            if op_fn is None:
+                continue
+            try:
+                pval = float(p.get(nf["field"]) or 0)
+                if not op_fn(pval, float(nf["value"])):
+                    return False
+            except (TypeError, ValueError):
+                return False
+        return True
 
     matched = []
     for p in parcels:
-        cat = (p.get("LANDUSE_CATEGORY") or "").lower()
-        sub = (p.get("SUBTYPE_LABEL_EN") or "").lower()
-        det = (p.get("DETAIL_LABEL_EN") or "").lower()
-        sta = (p.get("PARCEL_STATUS_LABEL") or "").lower()
+        # Determine label match (most specific wins)
+        if has_label_filter:
+            cat = (p.get("LANDUSE_CATEGORY") or "").lower()
+            sub = (p.get("SUBTYPE_LABEL_EN") or "").lower()
+            det = (p.get("DETAIL_LABEL_EN") or "").lower()
+            sta = (p.get("PARCEL_STATUS_LABEL") or "").lower()
 
-        # Use the most specific filter available
-        if details:
-            if det in details:
-                matched.append(str(p.get("PARCEL_ID")))
-        elif subtypes:
-            if sub in subtypes:
-                matched.append(str(p.get("PARCEL_ID")))
-        elif categories:
-            if cat in categories:
-                matched.append(str(p.get("PARCEL_ID")))
-        elif statuses:
-            if sta in statuses:
-                matched.append(str(p.get("PARCEL_ID")))
+            if details:
+                label_match = det in details
+            elif subtypes:
+                label_match = sub in subtypes
+            elif categories:
+                label_match = cat in categories
+            else:
+                label_match = sta in statuses
+        else:
+            label_match = True  # no label filter — numeric filter alone decides
+
+        if label_match and passes_numeric(p):
+            matched.append(str(p.get("PARCEL_ID")))
 
     return matched
 

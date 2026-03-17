@@ -1,26 +1,53 @@
 import React, { useState } from 'react';
-import { Layers, FileText, Loader2, Download } from 'lucide-react';
-import { exportShapefile } from '../api/client';
+import { Layers, FileText, Loader2, Database } from 'lucide-react';
+import { exportGDB } from '../api/client';
 
-export default function TopBar({ selectionSummary, onGenerateReport, isGeneratingReport, selectedObjectIds }) {
+export default function TopBar({ 
+  selectionSummary, 
+  onGenerateReport, 
+  isGeneratingReport, 
+  selectedObjectIds,
+  polygonCoordinates,
+  activeCategory,
+  queriedParcels,
+  capacityCalculations,
+}) {
   const parcelCount = selectionSummary?.total_parcels || 0;
   const [exporting, setExporting] = useState(false);
 
-  const handleExportShapefile = async () => {
+  const handleExportGDB = async () => {
     if (!selectedObjectIds?.length || exporting) return;
     setExporting(true);
     try {
-      const blob = await exportShapefile(selectedObjectIds);
-      const url = window.URL.createObjectURL(blob instanceof Blob ? blob : new Blob([blob], { type: 'application/zip' }));
+      // Build the complete export payload with all session context
+      const exportPayload = {
+        selected_objectids: selectedObjectIds,
+        polygon_coordinates: polygonCoordinates || undefined,
+        selection_summary: selectionSummary || undefined,
+        query_category: activeCategory || undefined,
+        query_parcel_ids: queriedParcels?.length > 0 
+          ? queriedParcels.map(p => p.PARCEL_ID || p.OBJECTID) 
+          : undefined,
+        capacity_calculations: capacityCalculations?.length > 0 
+          ? capacityCalculations 
+          : undefined,
+        generate_report_if_missing: true,
+      };
+
+      const blob = await exportGDB(exportPayload);
+      const url = window.URL.createObjectURL(
+        blob instanceof Blob ? blob : new Blob([blob], { type: 'application/zip' })
+      );
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `parcels_export_${Date.now()}.zip`);
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '_').replace('T', '_');
+      link.setAttribute('download', `GIS_Analysis_${timestamp}.zip`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Failed to export shapefile', err);
+      console.error('Failed to export GDB', err);
     } finally {
       setExporting(false);
     }
@@ -76,22 +103,22 @@ export default function TopBar({ selectionSummary, onGenerateReport, isGeneratin
           )}
         </button>
 
-        {/* Export Shapefile Button */}
+        {/* Export GDB Button */}
         <button
           style={{
             ...styles.exportBtn,
             ...(parcelCount === 0 || exporting ? styles.reportBtnDisabled : {}),
           }}
-          onClick={handleExportShapefile}
+          onClick={handleExportGDB}
           disabled={parcelCount === 0 || exporting}
-          title="Export as Shapefile"
+          title="Export as File Geodatabase (.gdb)"
         >
           {exporting ? (
             <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
           ) : (
-            <Download size={13} />
+            <Database size={13} />
           )}
-          <span>{exporting ? 'Exporting…' : 'Export'}</span>
+          <span>{exporting ? 'Exporting…' : 'Export GDB'}</span>
         </button>
       </header>
     </div>

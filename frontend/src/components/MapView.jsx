@@ -283,23 +283,27 @@ export default function MapView({
   const handleDrawComplete = useCallback(async (type, data) => {
     try {
       let result;
+      let polygonCoords = null;
       if (type === 'bbox') {
         result = await selectBBox(data.min_lat, data.max_lat, data.min_lon, data.max_lon);
         // Store as polygon for boundary overlay
-        setDrawnPolygon([
+        polygonCoords = [
           [data.min_lat, data.min_lon],
           [data.min_lat, data.max_lon],
           [data.max_lat, data.max_lon],
           [data.max_lat, data.min_lon],
           [data.min_lat, data.min_lon],
-        ]);
+        ];
+        setDrawnPolygon(polygonCoords);
       } else if (type === 'polygon') {
         result = await selectPolygon(data);
+        polygonCoords = data;
         setDrawnPolygon(data);
       }
 
       if (result) {
-        onSelectionComplete(result, result.selected_objectids || [], result.parcels || []);
+        // Pass polygon coordinates to onSelectionComplete for GDB export
+        onSelectionComplete(result, result.selected_objectids || [], result.parcels || [], polygonCoords);
       }
     } catch (e) {
       console.error('Selection failed:', e);

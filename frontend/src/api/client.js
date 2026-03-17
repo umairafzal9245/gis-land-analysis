@@ -165,6 +165,34 @@ export const exportShapefile = async (selectedObjectIds) => {
   return response.data;
 };
 
+/**
+ * Export analysis results to File Geodatabase (.gdb) format.
+ * 
+ * Creates a complete GDB export containing:
+ * - Selection polygon layer
+ * - All selected parcels with full geometry and computed fields
+ * - Query result layer (if category filter was applied)
+ * - Capacity calculations layer (if calculations were performed)
+ * - Analysis summary table
+ * - LLM report sections table
+ * - Domain lookup tables for Arabic labels
+ * 
+ * @param {object} exportPayload - Export request payload
+ * @param {string[]} exportPayload.selected_objectids - List of parcel IDs to export
+ * @param {number[][]} exportPayload.polygon_coordinates - [[lat, lon], ...] selection polygon
+ * @param {object} exportPayload.selection_summary - Full selection summary
+ * @param {string} exportPayload.query_category - Applied category filter
+ * @param {string[]} exportPayload.query_parcel_ids - IDs matching the filter
+ * @param {object[]} exportPayload.capacity_calculations - Capacity calculations performed
+ * @param {string} exportPayload.report_text - Pre-generated report (optional)
+ * @param {boolean} exportPayload.generate_report_if_missing - Generate report if not provided
+ * @returns {Promise<Blob>} Zipped GDB export
+ */
+export const exportGDB = async (exportPayload) => {
+  const response = await apiClient.post('/export/gdb', exportPayload, { responseType: 'blob' });
+  return response.data;
+};
+
 // ============================================================================
 // Legacy Endpoints (backward compatibility)
 // ============================================================================

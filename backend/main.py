@@ -18,6 +18,7 @@ from backend.models import (
     ReportRequest,
     ReportResponse,
     ShapefileExportRequest,
+    GDBExportRequest,
     # Legacy models
     BBoxRequest,
     PolygonRequest,
@@ -341,6 +342,56 @@ def export_shapefile(req: ShapefileExportRequest):
     except HTTPException:
         raise
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/export/gdb")
+def export_gdb(req: GDBExportRequest):
+    """Export analysis results as a zipped File Geodatabase (.gdb).
+    
+    This endpoint creates a complete GDB export containing:
+    - Selection polygon layer
+    - All selected parcels with full geometry and computed fields
+    - Query result layer (if category filter was applied)
+    - Capacity calculations layer (if calculations were performed)
+    - Analysis summary table
+    - LLM report sections table
+    - Domain lookup tables for Arabic labels
+    
+    The export is returned as a zip file containing the .gdb folder,
+    a README.txt with usage instructions, and the report as a text file.
+    
+    Falls back to GeoPackage (.gpkg) if GDB writing is not supported.
+    """
+    try:
+        from backend.gdb_export import export_to_gdb
+        from datetime import datetime
+        
+        zip_buffer = export_to_gdb(
+            selected_objectids=req.selected_objectids,
+            polygon_coordinates=req.polygon_coordinates,
+            selection_summary=req.selection_summary,
+            query_category=req.query_category,
+            query_parcel_ids=req.query_parcel_ids,
+            capacity_calculations=req.capacity_calculations,
+            report_text=req.report_text,
+            generate_report_if_missing=req.generate_report_if_missing,
+        )
+        
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M")
+        filename = f"GIS_Analysis_{timestamp}.zip"
+        
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/zip",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 

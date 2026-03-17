@@ -47,12 +47,16 @@ export default function App() {
 
   // Map zoom target [lat, lng]
   const [zoomTarget, setZoomTarget] = useState(null);
+  
+  // Selection polygon coordinates for GDB export
+  const [polygonCoordinates, setPolygonCoordinates] = useState(null);
 
   // Handle selection complete from MapView
-  const handleSelectionComplete = useCallback((summary, objectIds, parcels) => {
+  const handleSelectionComplete = useCallback((summary, objectIds, parcels, polygonCoords) => {
     setSelectionSummary(summary);
     setSelectedObjectIds(objectIds);
     setSelectionData({ parcels });
+    setPolygonCoordinates(polygonCoords || null);
     setIsBottomPanelExpanded(true);
     // Reset ALL query + session context when a new area is drawn
     setHighlightedObjectIds([]);
@@ -69,6 +73,7 @@ export default function App() {
     setSelectionSummary(null);
     setSelectionData(null);
     setSelectedObjectIds([]);
+    setPolygonCoordinates(null);
     setHighlightedObjectIds([]);
     setQueriedParcels([]);
     setActiveCategory(null);
@@ -419,6 +424,10 @@ export default function App() {
         onGenerateReport={handleGenerateReport}
         isGeneratingReport={isGeneratingReport}
         selectedObjectIds={selectedObjectIds}
+        polygonCoordinates={polygonCoordinates}
+        activeCategory={activeCategory}
+        queriedParcels={queriedParcels}
+        capacityCalculations={capacityCalculations}
       />
 
       {/* Left Toolbar */}

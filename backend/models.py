@@ -148,6 +148,47 @@ class ShapefileExportRequest(BaseModel):
     )
 
 
+class GDBExportRequest(BaseModel):
+    """Request to export analysis results as File Geodatabase (.gdb).
+    
+    Contains the complete session context: selection polygon, selected parcels,
+    query results, capacity calculations, and optional report text.
+    """
+    selected_objectids: List[str] = Field(
+        ...,
+        min_length=1,
+        description="List of PARCEL_IDs to export"
+    )
+    polygon_coordinates: Optional[List[List[float]]] = Field(
+        default=None,
+        description="List of [lat, lon] coordinate pairs for the selection polygon"
+    )
+    selection_summary: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Full selection summary with breakdown, areas, capacities"
+    )
+    query_category: Optional[str] = Field(
+        default=None,
+        description="Applied category filter (e.g. 'Religious', 'Commercial')"
+    )
+    query_parcel_ids: Optional[List[str]] = Field(
+        default=None,
+        description="IDs of parcels matching the category query"
+    )
+    capacity_calculations: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        description="Individual capacity calculations performed by user"
+    )
+    report_text: Optional[str] = Field(
+        default=None,
+        description="Pre-generated LLM report text (if available)"
+    )
+    generate_report_if_missing: bool = Field(
+        default=True,
+        description="Whether to generate LLM report if not provided"
+    )
+
+
 # =============================================================================
 # Legacy Models (backward compatibility)
 # =============================================================================
