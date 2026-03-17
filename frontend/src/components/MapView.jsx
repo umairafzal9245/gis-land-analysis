@@ -113,26 +113,12 @@ function DrawControlWrapper({ drawMode, onDrawComplete, clearTrigger }) {
           circlemarker: false,
           marker: false,
           polyline: false,
-          rectangle: {
-            shapeOptions: {
-              color: '#3b82f6',
-              fillColor: '#3b82f6',
-              fillOpacity: 0.2,
-              weight: 2,
-            },
-          },
-          polygon: {
-            shapeOptions: {
-              color: '#3b82f6',
-              fillColor: '#3b82f6',
-              fillOpacity: 0.2,
-              weight: 2,
-            },
-          },
+          rectangle: false,
+          polygon: false,
         }}
         edit={{
           edit: false,
-          remove: true,
+          remove: false,
         }}
       />
     </FeatureGroup>
